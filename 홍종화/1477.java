@@ -22,62 +22,24 @@ class Main {
 		express[N] = L;
 		Arrays.sort(express);
 
-		int r = Integer.MIN_VALUE;
-		for (int i = 1; i < N + 1; i++) {
-			int diff = express[i] - express[i - 1];
-			if (r < diff) {
-				r = diff;
-			}
-		}
-
 		int l = 0;
-		int ans = Integer.MAX_VALUE;
+		int r = L;
 		while (l <= r) {
 			int mid = (l + r) / 2;
-			int res = isPossible(mid);
-			if (res == -1) {
+			if (isPossible(mid)) {
 				l = mid + 1;
-			} else if (res == 0) {
-				r = mid - 1;
 			} else {
-				if (res < ans) {
-					ans = res;
-				}
-				l = mid + 1;
+				r = mid - 1;
 			}
 		}
-		System.out.println(ans);
+		System.out.println(l);
 	}
 
-	public static int isPossible(int mid) {
-		final int MAX_SIZE = N + M + 2;
-		int[] tmp = new int[MAX_SIZE];
+	public static boolean isPossible(int mid) {
 		int cnt = 0;
-
 		for (int i = 0; i < N + 1; i++) {
-			tmp[cnt++] = express[i];
-			int next = express[i] + mid;
-			while (cnt < MAX_SIZE && next < express[i + 1]) {
-				tmp[cnt++] = next;
-				next += mid;
-			}
-
-			if (MAX_SIZE <= cnt) {
-				return -1;
-			}
+			cnt += (express[i + 1] - express[i] - 1) / mid;
 		}
-
-		tmp[cnt++] = express[N + 1];
-		if (cnt < MAX_SIZE) {
-			return 0;
-		}
-		int maxDiff = Integer.MIN_VALUE;
-		for (int i = 0; i < MAX_SIZE - 1; i++) {
-			int diff = tmp[i + 1] - tmp[i];
-			if (maxDiff < diff) {
-				maxDiff = diff;
-			}
-		}
-		return maxDiff;
+		return M < cnt;
 	}
 }
