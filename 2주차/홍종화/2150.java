@@ -1,19 +1,21 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.PriorityQueue;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Stack;
 import java.util.StringTokenizer;
 
 class Main {
     final static Stack<Integer> stack = new Stack<>();
-    static boolean[] isVisit, finished;
-    static int[] parent;
+    static boolean[] finished;
     static int[] dfsn;
     static int V, E;
     static int order;
-    static int ansCnt = 0;
-    static StringBuilder ansSB = new StringBuilder();
-    static PriorityQueue<Integer>[] pq;
+    static StringBuilder ansSB;
+    static ArrayList<Integer>[] list;
+    static ArrayList<ArrayList> aalist;
 
     public static void main(String[] argv) throws Exception {
         final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -22,76 +24,79 @@ class Main {
 
         V = atoi(st.nextToken());
         E = atoi(st.nextToken());
-        isVisit = new boolean[V + 1];
         finished = new boolean[V + 1];
         dfsn = new int[V + 1];
-        pq = new PriorityQueue[V + 1];
+        Arrays.fill(dfsn, -1);
+        list = new ArrayList[V + 1];
+        aalist = new ArrayList<>();
+
         for (int i = 1; i <= V; i++) {
-            pq[i] = new PriorityQueue<>();
+            list[i] = new ArrayList<>();
         }
 
         for (int i = 0; i < E; i++) {
             st = new StringTokenizer(br.readLine());
             int s = atoi(st.nextToken());
             int e = atoi(st.nextToken());
-            pq[s].add(e);
+            list[s].add(e);
         }
 
         order = 1;
+        ansSB = new StringBuilder();
         for (int i = 1; i <= V; i++) {
-            dfs(i);
-        }
-
-        System.out.println(stack);
-        System.out.println(ansCnt);
-        System.out.println(ansSB.length());
-    }
-
-    public static boolean dfs(int v) {
-        // 사이클생김
-        if (dfsn[v] != 0 && !finished[v]) {
-            return true;
-        }
-
-        dfsn[v] = order++;
-        isVisit[v] = true;
-
-        // 리프노드인경우..
-        if (pq[v].isEmpty()) {
-            ansCnt += 1;
-            finished[v] = true;
-            ansSB.append(v).append("-1\n");
-            return false;
-        }
-
-        stack.push(v);
-        // 자식이 있는경우
-        boolean isCycle = false;
-        while (!pq[v].isEmpty()) {
-            int child = pq[v].poll();
-            if (dfs(child)) {
-                isCycle = true;
+            if (dfsn[i] == -1) {
+                dfs(i);
             }
         }
 
-        if (isCycle == false) {
-            ansCnt += 1;
+        System.out.println(aalist.size());
+        Collections.sort(aalist, new MyComparator());
+        for (ArrayList<Integer> curList : aalist) {
+            for (int num : curList) {
+                ansSB.append(num + " ");
+            }
+            ansSB.append("-1\n");
+        }
+        System.out.println(ansSB);
+    }
+
+    public static int dfs(int v) {
+        dfsn[v] = order++;
+        stack.push(v);
+        int res = dfsn[v];
+        for (int next : list[v]) {
+            if (dfsn[next] == -1) {
+                res = Math.min(res, dfs(next));
+            } else if (!finished[next]) {
+                res = Math.min(res, dfsn[next]);
+            }
+        }
+
+        if (res == dfsn[v]) {
+            ArrayList<Integer> list = new ArrayList<>();
             while (true) {
                 int pop = stack.pop();
+                list.add(pop);
                 finished[pop] = true;
-                ansSB.append(pop + " ");
                 if (pop == v) {
-                    ansSB.append("-1\n");
                     break;
                 }
             }
-            return false;
+            Collections.sort(list);
+            aalist.add(list);
         }
 
-        return isCycle;
+        return res;
     }
 
     private static int atoi(String s) {
         return Integer.parseInt(s);
+    }
+}
+
+class MyComparator<T extends Number & Comparable<T>> implements Comparator<ArrayList<T>> {
+    @Override
+    public int compare(ArrayList<T> a, ArrayList<T> b) {
+        return a.get(0).compareTo(b.get(0));
     }
 }
